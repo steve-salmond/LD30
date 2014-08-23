@@ -2,67 +2,60 @@
 using System.Collections.Generic;
 
 /**
- * GravityManager manages a set of gravitational sources,
- * and can give you a gravity force vector at any point in the scene.
+ * GravityManager can give you a gravity force vector at any point in the scene.
  */
 
 public class GravityManager : Singleton<GravityManager> 
 {
 
+	// Properties
+	// -----------------------------------------------------
+
+	/** Maximum distance from ground at which gravity applies. */
+	public float GroundMaxDistance = 100;
+
+	/** Layer mask for determining what constitutes solid ground. */
+	public LayerMask GroundLayers;
+
+	/** Strength of the gravitational field. */
+	public float Strength;
+
+
 	// Members
 	// -----------------------------------------------------
 
-	/** The set of gravitational sources in the scene. */
-	private List<GravitySource> sources = new List<GravitySource>();
+	/** Raycast hit info. */
+	private RaycastHit hit =  new RaycastHit();
 
 
 	// Public Methods
 	// -----------------------------------------------------
 
-	/** Register a gravitational source. */
-	public void Register(GravitySource source)
-	{ sources.Add(source); }
-
 	/** Return a gravity force vector, given a point in world space. */
 	public Vector3 ForceAt(Vector3 point)
 	{
-		// Determine closest surface point/normal amongst all 
-		// registered sources of gravity.
-		GravitySource sClosest = null;
-		float dClosest = float.MaxValue;
-		int iClosest = -1;
-
-		// Iterate over each source, looking for the closest point.
-		foreach (GravitySource source in sources)
+		// Scatter rays out randomly, looking for solid ground.
+		// When we hit it, accumulate the resulting surface normal.
+		Vector3 gravity = Vector3.zero;
+		int samples = 64;
+		for (int i = 0; i < samples; i++)
 		{
-			Mesh mesh = source.Mesh;
-			Transform t = source.transform;
-			Vector3 local = t.InverseTransformPoint(point);
-			Vector3[] vertices = mesh.vertices;
-			Vector3[] normals = mesh.normals;
-			int n = vertices.Length;
-			for (int i = 0; i < n; i++)
+			Vector3 direction = Random.onUnitSphere;
+			if (Physics.Raycast(point, direction, out hit, GroundMaxDistance, GroundLayers))
+				gravity -= (hit.normal * 1 / (hit.distance * hit.distance));
+
+			/*
 			{
-				float d = Vector3.Distance(local, vertices[i]);
-				if (d < dClosest)
-				{
-					dClosest = d;
-					iClosest = i;
-					sClosest = source;
-				}
+				// Recover the gravity source.
+				GravitySource source = hit.collider.gameObject.GetComponent<GravitySource>();
+				if (source)
+					gravity += hit.normal * source.Strength;
 			}
+			*/
 		}
 
-		// Compute the current gravity vector.
-		if (sClosest != null)
-		{
-			Mesh mesh = sClosest.Mesh;
-			Vector3 nLocal = mesh.normals[iClosest];
-			Vector3 n = sClosest.transform.TransformDirection(nLocal);
-			return -n * sClosest.Strength;
-		}
-		else
-			return Vector3.zero;
+		// Return the overall gravity direction.
+		return gravity.normalized * Strength;
 	}
 
 }

@@ -115,6 +115,7 @@ public class PlayerController : Singleton<PlayerController> {
 	{
 		// Get a gravity vector at player's current location.
 		Vector3 g = GravityManager.Instance.ForceAt(t.position);
+		Debug.DrawRay(t.position, g, Color.cyan);
 
 		// Check for zero gravity.
 		if (g.sqrMagnitude == 0)
@@ -143,7 +144,7 @@ public class PlayerController : Singleton<PlayerController> {
 		// Get movement axes.
 		Transform tCam = Camera.main.transform;
 		Vector3 strafe = Vector3.Cross(up, tCam.forward);
-		Vector3 move = Vector3.Cross(strafe, up);
+		Vector3 move = tCam.forward;
 		
 		// Apply movement inputs.
 		float speed = Grounded ? GroundedSpeed : AirborneSpeed;
@@ -151,6 +152,7 @@ public class PlayerController : Singleton<PlayerController> {
 		float dy = Input.GetAxis("Vertical");
 		Vector3 f = (move * dy + strafe * dx).normalized;
 		rigidbody.AddForce(f * speed * dt);
+		Debug.DrawRay(rigidbody.position, f, Color.yellow);
 		
 		// Apply jump.
 		if (Input.GetButton("Jump") && Grounded)
