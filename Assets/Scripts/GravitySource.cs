@@ -16,11 +16,24 @@ public class GravitySource : MonoBehaviour
 	public float Strength;
 
 
+	/** The source's mesh. */
+	public Mesh Mesh
+	{ get; private set; }
+
+
 	// Unity Methods
 	// -----------------------------------------------------
 	
 	/** Preinitialization. */
 	void Awake() 
-	{ GravityManager.Instance.Register(this); }
+	{ 
+		// Look for a mesh on this source.
+		MeshFilter m = GetComponent<MeshFilter>();
+		Mesh = m ? m.mesh : null;
+
+		// Only register ourselves as a source if we have a mesh to work with.
+		if (Mesh != null)
+			GravityManager.Instance.Register(this); 
+	}
 
 }
