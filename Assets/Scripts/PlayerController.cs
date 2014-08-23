@@ -79,13 +79,6 @@ public class PlayerController : Singleton<PlayerController> {
 	/** Update. */
 	void Update()
 	{
-		// Update up vector.
-		UpdateUp();
-
-		// Update player's control inputs.
-		if (Alive)
-			UpdateInput();
-		
 		// Go fullscreen on enter.
 		if (Input.GetKeyDown(KeyCode.Return))
 			Screen.fullScreen = !Screen.fullScreen;
@@ -94,6 +87,13 @@ public class PlayerController : Singleton<PlayerController> {
 	/** Physics update. */
 	void FixedUpdate() 
 	{
+		// Update up vector.
+		UpdateUp();
+
+		// Update player's control inputs.
+		if (Alive)
+			UpdateInput();
+
 		// Update player's orientation.
 		Vector3 lookat = Upright.forward;
 		Vector3 right = Vector3.Cross(up, lookat);
