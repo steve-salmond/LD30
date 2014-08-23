@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
-using System.Collections;
+
+/**
+ * Rotates a game object about the given local axis with a set speed.
+ */
 
 public class Orbit : MonoBehaviour 
 {
@@ -20,15 +23,16 @@ public class Orbit : MonoBehaviour
 	/** Cached transform. */
 	private Transform t;
 
-	// Use this for initialization
+
+	// Unity Methods
+	// -----------------------------------------------------
+
+	/** Initialization. */
 	void Start() 
-	{
-		t = transform;
-	}
+	{ t = transform; }
 	
-	// Update is called once per frame
+	/** Physics update. */
 	void FixedUpdate() 
-	{
-		t.Rotate (Axis, Speed * Time.deltaTime, Space.Self);
-	}
+	{ t.Rotate (Axis, Speed * Time.deltaTime, Space.Self); }
+
 }
