@@ -131,7 +131,7 @@ public class PlayerController : Singleton<PlayerController> {
 	{
 		// Update the smoothed reference up vector.
 		Vector3 target = GetTargetUp();
-		up = Vector3.SmoothDamp(up, target, ref upVelocity, 0.5f);
+		up = Vector3.SmoothDamp(up, target, ref upVelocity, 0.25f);
 		up = up.normalized;
 	}
 	
