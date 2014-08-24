@@ -55,6 +55,9 @@ public class Plant : MonoBehaviour
 		/** Scale of branch relative to its parent. */
 		public float MinScale = 1, MaxScale = 1;
 
+		/** Whether branch scales uniformly. */
+		public bool ScaleUniform = false;
+
 		/** Depth increment. */
 		public float MinDeepen = 1, MaxDeepen = 1;
 	}
@@ -75,6 +78,9 @@ public class Plant : MonoBehaviour
 	{
 		// Start growing the plant!
 		Grow();
+
+		// Shake the camera.
+		CameraController.Instance.Shake(transform.position, 10, 0.75f);
 	}
 
 
@@ -155,21 +161,25 @@ public class Plant : MonoBehaviour
 		// Move branch into its desired orientation.
 		piece.transform.localPosition = translate;
 		piece.transform.localRotation = Quaternion.Euler(rotate);
-		piece.transform.localScale = new Vector3(scale, 0, scale);
+		piece.transform.localScale = new Vector3(scale, scale, scale);
 
 		// Scale up the branch over time.
+		GameObject scalable = piece.GetComponent<PlantSection>().Scaleable;
 		float duration = Random.Range(b.MinDuration, b.MaxDuration);
 		float start = Time.time, end = start + duration;
 		while (Time.time < end)
 		{
 			float f = (Time.time - start) / (end - start);
-			float s = scale * f;
-			piece.transform.localScale = new Vector3(scale, s, scale);
+			if (b.ScaleUniform)
+				scalable.transform.localScale = new Vector3(f, f, f);
+			else
+				scalable.transform.localScale = new Vector3(1, f, 1);
+
 			yield return new WaitForEndOfFrame();
 		}
 
 		// Set branch to final scaling.
-		piece.transform.localScale = new Vector3(scale, scale, scale);
+		scalable.transform.localScale = new Vector3(1, 1, 1);
 
 		// Add piece to the stack.
 		pieces.Push(piece);

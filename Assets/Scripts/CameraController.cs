@@ -15,15 +15,20 @@ public class CameraController : Singleton<CameraController>
 	// -----------------------------------------------------
 	
 	/** Cached transform. */
-	protected Transform t;
-	
+	private Transform t;
+
+	/** Shake amount. */
+	private float shake = 0;
+
 	
 	// Unity Methods
 	// -----------------------------------------------------
 	
 	/** Preinitialization. */
 	void Awake()
-	{ t = transform; }
+	{ 
+		t = transform; 
+	}
 	
 	/** Update the camera's orientation. */
 	void LateUpdate() 
@@ -43,9 +48,35 @@ public class CameraController : Singleton<CameraController>
 			camAngles.x -= 360;
 		float camRotY = camAngles.x - Input.GetAxis("Mouse Y") * Sensitivity.y * dt;
 		float camRotX = camAngles.y + Input.GetAxis("Mouse X") * Sensitivity.x * dt;
+
+		camRotX += Random.Range(-shake, shake);
+		camRotY += Random.Range(-shake, shake);
 		
 		camRotY = Mathf.Clamp(camRotY, -85, 85);
-		t.localEulerAngles = new Vector3(camRotY, camRotX, 0);
+		t.localEulerAngles = new Vector3(camRotY, camRotX, 0) ;
 	}
-	
+
+	// Public Methods
+	// -----------------------------------------------------
+
+	/** Shake the camera. */
+	public void Shake(Vector3 p, float strength, float duration)
+	{
+		StartCoroutine(Shaker(p, strength, duration));
+	}
+
+	/** Shakes the camera. */
+	private IEnumerator Shaker(Vector3 p, float strength, float duration)
+	{
+		float start = Time.time;
+		float end = start + duration;
+		while (Time.time < end)
+		{
+			float f = (Time.time - start) / (end - start);
+			float d = Vector3.Distance(p, t.position);
+			shake = strength * (1 - f) * (1 / (d + 1));
+			yield return new WaitForEndOfFrame();
+		}
+	}
+
 }

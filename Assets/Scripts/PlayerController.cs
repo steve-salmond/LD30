@@ -27,6 +27,12 @@ public class PlayerController : Singleton<PlayerController> {
 	 */
 	public Transform Upright;
 
+	/** Jumping sound. */
+	public AudioClip JumpSound;
+
+	/** Jump audio source. */
+	public AudioSource JumpSource;
+
 
 	// Accessors
 	// -----------------------------------------------------
@@ -159,6 +165,9 @@ public class PlayerController : Singleton<PlayerController> {
 		
 		// Apply jump.
 		if (Input.GetButton("Jump") && Grounded)
+		{
 			rigidbody.AddForce(up * JumpSpeed * dt);
+			JumpSource.PlayOneShot(JumpSound, 0.15f);
+		}
 	}
 }
