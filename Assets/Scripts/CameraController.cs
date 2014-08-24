@@ -33,7 +33,6 @@ public class CameraController : Singleton<CameraController>
 	{ 
 		t = transform; 
 		vignette = GetComponent<Vignetting>();
-		StartCoroutine(FadeIn());
 	}
 	
 	/** Update the camera's orientation. */
@@ -71,6 +70,12 @@ public class CameraController : Singleton<CameraController>
 	// Public Methods
 	// -----------------------------------------------------
 
+	public void FadeIn()
+	{ StartCoroutine(FadeInRoutine()); }
+
+	public void FadeOut()
+	{ StartCoroutine(FadeOutRoutine()); }
+
 	/** Shake the camera. */
 	public void Shake(Vector3 p, float strength, float duration)
 	{
@@ -92,7 +97,7 @@ public class CameraController : Singleton<CameraController>
 	}
 
 	/** Fade in from black. */
-	private IEnumerator FadeIn()
+	private IEnumerator FadeInRoutine()
 	{
 		if (!vignette)
 			yield return null;
@@ -102,6 +107,24 @@ public class CameraController : Singleton<CameraController>
 		while (Time.time < end)
 		{
 			float f = (Time.time - start) / (end - start);
+			vignette.intensity = Mathf.Lerp(30, 5, f);
+			vignette.blur = Mathf.Lerp(5, 0.5f, f);
+			vignette.blurSpread = Mathf.Lerp(2, 0.75f, f);
+			yield return new WaitForEndOfFrame();
+		}
+	}
+
+	/** Fade out to black. */
+	private IEnumerator FadeOutRoutine()
+	{
+		if (!vignette)
+			yield return null;
+		
+		float start = Time.time;
+		float end = start + 3;
+		while (Time.time < end)
+		{
+			float f = 1 - (Time.time - start) / (end - start);
 			vignette.intensity = Mathf.Lerp(30, 5, f);
 			vignette.blur = Mathf.Lerp(5, 0.5f, f);
 			vignette.blurSpread = Mathf.Lerp(2, 0.75f, f);

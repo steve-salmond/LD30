@@ -33,6 +33,9 @@ public class PlayerController : Singleton<PlayerController> {
 	/** Jump audio source. */
 	public AudioSource JumpSource;
 
+	/** Number of gems player needs to win. */
+	public int GemsToWin = 7;
+
 
 	// Accessors
 	// -----------------------------------------------------
@@ -59,6 +62,10 @@ public class PlayerController : Singleton<PlayerController> {
 
 	/** How many beans player has. */
 	public int BeanCounter
+	{ get; private set; }
+
+	/** How many gems player has. */
+	public int GemCounter
 	{ get; private set; }
 
 	/** How much to smooth the player's up vector. */
@@ -92,6 +99,9 @@ public class PlayerController : Singleton<PlayerController> {
 	/** Initialization. */
 	void Start()
 	{
+		// CameraController.Instance.FadeIn();
+		TitleController.Instance.FadeIn();
+
 		SpeechManager.Instance.Say("WhereAmI", 3);
 		SpeechManager.Instance.Say("IsThisADream", 10);
 		SpeechManager.Instance.Say("HaveToFindMyWayHome", 15);
@@ -143,6 +153,7 @@ public class PlayerController : Singleton<PlayerController> {
 
 		// Cancel irrelevant speech.
 		SpeechManager.Instance.Cancel("WhereAmI");
+		SpeechManager.Instance.Cancel("IsThisADream");
 		SpeechManager.Instance.Cancel("HaveToFindMyWayHome");
 	}
 
@@ -158,9 +169,39 @@ public class PlayerController : Singleton<PlayerController> {
 		SpeechManager.Instance.Cancel("MaybeICouldPlantIt");
 	}
 
+	/** Player has picked up a gem. */
+	public void PickUpGem()
+	{
+		// Count the gems.
+		GemCounter++;
+
+		// Win condition.
+		if (GemCounter >= GemsToWin)
+			Win();
+	}
+
 
 	// Private Methods
 	// -----------------------------------------------------
+
+	/** Called when player wins the game. */
+	public void Win()
+	{
+		EndController.Instance.FadeIn();
+		SpeechManager.Instance.Say("TheEnd");
+		StartCoroutine(WaitForKeypress());
+	}
+
+	private IEnumerator WaitForKeypress()
+	{
+		while (!Input.GetButton("Fire1"))
+			yield return new WaitForEndOfFrame();
+
+		EndController.Instance.FadeOut();
+		yield return new WaitForSeconds(3);
+
+		Application.LoadLevel(Application.loadedLevel);
+	}
 
 	/** Computes a instantaneous target reference up vector. */
 	private Vector3 GetTargetUp()

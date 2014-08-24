@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEditor;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -43,7 +44,8 @@ public class PlanetSpawner : MonoBehaviour
 		Vector3 forward = Vector3.Cross(side, up);
 		Quaternion q = Quaternion.LookRotation(forward, up);
 
-		GameObject go = Instantiate(Prefab) as GameObject;
+
+		GameObject go = PrefabUtility.InstantiatePrefab(Prefab) as GameObject;
 		go.transform.parent = transform;
 		go.transform.localPosition = p;
 		go.transform.localRotation = q;

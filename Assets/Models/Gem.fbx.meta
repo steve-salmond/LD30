@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: e8decb714d402a044ae613ca204d5211
+guid: c4d1e0d66153ca941a6e29491d89d161
 ModelImporter:
   serializedVersion: 16
   fileIDToRecycleName:
@@ -7,7 +7,7 @@ ModelImporter:
     400000: //RootNode
     2300000: //RootNode
     3300000: //RootNode
-    4300000: Cube
+    4300000: Cylinder
     9500000: //RootNode
   materials:
     importMaterials: 1
@@ -33,7 +33,7 @@ ModelImporter:
     addColliders: 0
     importBlendShapes: 0
     swapUVChannels: 0
-    generateSecondaryUV: 1
+    generateSecondaryUV: 0
     useFileUnits: 1
     optimizeMeshForGPU: 1
     weldVertices: 1
