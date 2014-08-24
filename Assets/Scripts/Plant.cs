@@ -81,10 +81,6 @@ public class Plant : MonoBehaviour
 
 		// Shake the camera.
 		CameraController.Instance.Shake(transform.position, 10, 0.75f);
-
-		// Key off speech lines
-		SpeechManager.Instance.Say("HmmIWonder", 6);
-		SpeechManager.Instance.Say("MaybeICanClimbIt", 8);
 	}
 
 

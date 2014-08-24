@@ -102,9 +102,11 @@ public class PlayerController : Singleton<PlayerController> {
 		// CameraController.Instance.FadeIn();
 		TitleController.Instance.FadeIn();
 
+		SpeechManager.Instance.Say("OnceUponATime", 1);
 		SpeechManager.Instance.Say("WhereAmI", 3);
-		SpeechManager.Instance.Say("IsThisADream", 10);
-		SpeechManager.Instance.Say("HaveToFindMyWayHome", 15);
+		SpeechManager.Instance.Say("IsThisADream", 5);
+		SpeechManager.Instance.Say("LittleDidHeKnow", 6);
+		SpeechManager.Instance.Say("Adventure", 12);
 	}
 
 	/** Update. */
@@ -150,11 +152,8 @@ public class PlayerController : Singleton<PlayerController> {
 		SpeechManager.Instance.Say("AGiantBean", 2);
 		SpeechManager.Instance.Say("HmmIWonder", 4);
 		SpeechManager.Instance.Say("MaybeICouldPlantIt", 6);
-
-		// Cancel irrelevant speech.
-		SpeechManager.Instance.Cancel("WhereAmI");
-		SpeechManager.Instance.Cancel("IsThisADream");
-		SpeechManager.Instance.Cancel("HaveToFindMyWayHome");
+		SpeechManager.Instance.Say("PlantPrompt01", 8);
+		SpeechManager.Instance.Say("PlantPrompt02", 12);
 	}
 
 	/** Player has sown a bean. */
@@ -163,10 +162,19 @@ public class PlayerController : Singleton<PlayerController> {
 		// Count the beans... :)
 		BeanCounter--;
 
+		// Key off speech lines
+		SpeechManager.Instance.Say("Aah", 0);
+		SpeechManager.Instance.Say("ABeanstalk", 0);
+		SpeechManager.Instance.Say("ItsHuge", 1);
+		SpeechManager.Instance.Say("MaybeICanClimbIt", 4);
+		SpeechManager.Instance.Say("MoreBeans", 10);
+
 		// Cancel speech that's no longer relevant.
 		SpeechManager.Instance.Cancel("AGiantBean");
 		SpeechManager.Instance.Cancel("HmmIWonder");
 		SpeechManager.Instance.Cancel("MaybeICouldPlantIt");
+		SpeechManager.Instance.Cancel("PlantPrompt01");
+		SpeechManager.Instance.Cancel("PlantPrompt02");
 	}
 
 	/** Player has picked up a gem. */
@@ -174,6 +182,14 @@ public class PlayerController : Singleton<PlayerController> {
 	{
 		// Count the gems.
 		GemCounter++;
+
+		// Key off speech lines
+		SpeechManager.Instance.Say("AGemStone", 2);
+		SpeechManager.Instance.Say("MoreOfThem", 4);
+		SpeechManager.Instance.Say("CollectThemAll", 8);
+		SpeechManager.Instance.Say("ThreeShouldBeEnough", 9);
+		SpeechManager.Instance.Say("MightyQuest", 10);
+		SpeechManager.Instance.Say("WhyNoIdea02", 15);
 
 		// Win condition.
 		if (GemCounter >= GemsToWin)

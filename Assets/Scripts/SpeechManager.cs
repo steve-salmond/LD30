@@ -8,14 +8,20 @@ public class SpeechManager : Singleton<SpeechManager>
 	// Properties
 	// -----------------------------------------------------
 
-	/** Audio source to use. */
-	public AudioSource Source;
+	/** Audio source to use for the boy. */
+	public AudioSource Boy;
+
+	/** Audio source to use for the narrator. */
+	public AudioSource Narrator;
 
 	/** The lines of speech. */
 	public List<Line> Lines;
 
 	/** Acceptable interval range between lines. */
 	public float MinInterval = 1, MaxInterval = 1;
+
+	/** Characters. */
+	public enum Character { Boy, Narrator };
 
 
 	// Inner Classes
@@ -30,6 +36,9 @@ public class SpeechManager : Singleton<SpeechManager>
 
 		/** Number of times line can be played. */
 		public int Limit = 1;
+
+		/** Desired pitch. */
+		public Character Character = Character.Boy;
 
 		/** Number of times line has been played. */
 		[System.NonSerialized]
@@ -62,9 +71,6 @@ public class SpeechManager : Singleton<SpeechManager>
 	{
 		foreach (Line line in Lines)
 			lookup[line.Clip.name] = line;
-
-		if (!Source)
-			Source = audio;
 	}
 
 	/** Play speech as needed. */
@@ -80,7 +86,11 @@ public class SpeechManager : Singleton<SpeechManager>
 				return;
 
 			// Play the line.
-			Source.PlayOneShot(line.Clip);
+			if (line.Character == Character.Boy)
+				Boy.PlayOneShot(line.Clip);
+			else if (line.Character == Character.Narrator)
+				Narrator.PlayOneShot(line.Clip);
+
 			nextPlayTime = Time.time + line.Clip.length + Random.Range(MinInterval, MaxInterval);
 		}
 
