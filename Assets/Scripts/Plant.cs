@@ -122,6 +122,10 @@ public class Plant : MonoBehaviour
 	/** Kill off a plant in reverse order of growth. */
 	public void Die()
 	{
+		// Stop any active growth.
+		StopAllCoroutines();
+
+		// Start withering.
 		StartCoroutine(Wither());
 	}
 
@@ -143,8 +147,8 @@ public class Plant : MonoBehaviour
 		piece.transform.parent = p;
 
 		// Randomize parameters.
-		Vector3 translate = RandomVectorInRange(b.MinTranslate, b.MaxTranslate);
-		Vector3 rotate = RandomVectorInRange(b.MinRotate, b.MaxRotate);
+		Vector3 translate = Util.RandomInRange(b.MinTranslate, b.MaxTranslate);
+		Vector3 rotate = Util.RandomInRange(b.MinRotate, b.MaxRotate);
 		float scale = Random.Range(b.MinScale, b.MaxScale);
 		float deepen = Random.Range(b.MinDeepen, b.MaxDeepen);
 
@@ -206,16 +210,6 @@ public class Plant : MonoBehaviour
 		// Once everything has withered, destroy plant entirely.
 		Destroy(gameObject);
 	}
-
-	/** Utility method for generating a random vector within a value range. */
-	private Vector3 RandomVectorInRange(Vector3 a, Vector3 b)
-	{
-		float x = Random.Range(a.x, b.x);
-		float y = Random.Range(a.y, b.y);
-		float z = Random.Range(a.z, b.z);
-		return new Vector3(x, y, z);
-	}
-
 
 
 }
