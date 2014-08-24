@@ -9,8 +9,8 @@ public class CameraController : Singleton<CameraController>
 	
 	/** Mouse sensitivity. */
 	public Vector2 Sensitivity;
-	
-	
+
+
 	// Members
 	// -----------------------------------------------------
 	
@@ -20,6 +20,10 @@ public class CameraController : Singleton<CameraController>
 	/** Shake amount. */
 	private float shake = 0;
 
+	/** Vignetting script. */
+	private Vignetting vignette;
+
+
 	
 	// Unity Methods
 	// -----------------------------------------------------
@@ -28,6 +32,8 @@ public class CameraController : Singleton<CameraController>
 	void Awake()
 	{ 
 		t = transform; 
+		vignette = GetComponent<Vignetting>();
+		StartCoroutine(FadeIn());
 	}
 	
 	/** Update the camera's orientation. */
@@ -41,13 +47,19 @@ public class CameraController : Singleton<CameraController>
 		Screen.lockCursor = alive;
 		if (!alive)
 			return;
-		
+
+		// Try to use XBox controller inputs if possible.
+		float lx = Input.GetAxis("Look X");
+		float ly = Input.GetAxis("Look Y");
+		float lookX = (Mathf.Abs(lx) > 0.05f) ? lx : Input.GetAxis("Mouse X"); 
+		float lookY = (Mathf.Abs(ly) > 0.05f) ? ly : Input.GetAxis("Mouse Y");
+
 		// Look up and down.
 		Vector3 camAngles = t.localEulerAngles;
 		if (camAngles.x > 180)
 			camAngles.x -= 360;
-		float camRotY = camAngles.x - Input.GetAxis("Mouse Y") * Sensitivity.y * dt;
-		float camRotX = camAngles.y + Input.GetAxis("Mouse X") * Sensitivity.x * dt;
+		float camRotY = camAngles.x - lookY * Sensitivity.y * dt;
+		float camRotX = camAngles.y + lookX * Sensitivity.x * dt;
 
 		camRotX += Random.Range(-shake, shake);
 		camRotY += Random.Range(-shake, shake);
@@ -75,6 +87,24 @@ public class CameraController : Singleton<CameraController>
 			float f = (Time.time - start) / (end - start);
 			float d = Vector3.Distance(p, t.position);
 			shake = strength * (1 - f) * (1 / (d + 1));
+			yield return new WaitForEndOfFrame();
+		}
+	}
+
+	/** Fade in from black. */
+	private IEnumerator FadeIn()
+	{
+		if (!vignette)
+			yield return null;
+
+		float start = Time.time;
+		float end = start + 3;
+		while (Time.time < end)
+		{
+			float f = (Time.time - start) / (end - start);
+			vignette.intensity = Mathf.Lerp(30, 5, f);
+			vignette.blur = Mathf.Lerp(5, 0.5f, f);
+			vignette.blurSpread = Mathf.Lerp(2, 0.75f, f);
 			yield return new WaitForEndOfFrame();
 		}
 	}

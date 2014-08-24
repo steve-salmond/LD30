@@ -92,7 +92,8 @@ public class PlayerController : Singleton<PlayerController> {
 	/** Initialization. */
 	void Start()
 	{
-		SpeechManager.Instance.Say("WhereAmI", 6);
+		SpeechManager.Instance.Say("WhereAmI", 3);
+		SpeechManager.Instance.Say("IsThisADream", 10);
 		SpeechManager.Instance.Say("HaveToFindMyWayHome", 15);
 	}
 
