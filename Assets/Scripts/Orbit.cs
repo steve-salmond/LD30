@@ -11,10 +11,10 @@ public class Orbit : MonoBehaviour
 	// -----------------------------------------------------
 
 	/** Axis of rotation. */
-	public Vector3 Axis;
+	public Vector3 Axis = Vector3.up;
 
 	/** Rotation speed (degrees per second). */
-	public float Speed;
+	public float Speed = 1;
 
 
 	// Members
@@ -29,10 +29,14 @@ public class Orbit : MonoBehaviour
 
 	/** Initialization. */
 	void Start() 
-	{ t = transform; }
+	{ 
+		t = transform; 
+	}
 	
 	/** Physics update. */
 	void FixedUpdate() 
-	{ t.Rotate (Axis, Speed * Time.deltaTime, Space.Self); }
+	{ 
+		t.Rotate(Axis, Speed * Time.deltaTime, Space.Self);
+	}
 
 }

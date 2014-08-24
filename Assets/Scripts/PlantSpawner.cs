@@ -63,6 +63,10 @@ public class PlantSpawner : MonoBehaviour
 		if (Time.time < nextSpawnTime)
 			return;
 
+		// Does player have a bean to sow?
+		if (PlayerController.Instance.BeanCounter <= 0)
+			return;
+
 		// Get the main camera transform.
 		Transform t = Camera.main.transform;
 
@@ -94,6 +98,9 @@ public class PlantSpawner : MonoBehaviour
 
 			// Schedule next spawn time.
 			nextSpawnTime = Time.time + Timeout;
+
+			// Tell player we're sowing a bean.
+			PlayerController.Instance.SowBean();
 		}
 	}
 

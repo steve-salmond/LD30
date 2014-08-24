@@ -57,6 +57,10 @@ public class PlayerController : Singleton<PlayerController> {
 	public bool Dead
 	{ get { return Health <= 0; } }
 
+	/** How many beans player has. */
+	public int BeanCounter
+	{ get; private set; }
+
 	/** How much to smooth the player's up vector. */
 	public float UpSmoothingFactor = 0.5f;
 
@@ -83,6 +87,13 @@ public class PlayerController : Singleton<PlayerController> {
 		Application.targetFrameRate = 60;
 		t = transform;
 		Health = 100;
+	}
+
+	/** Initialization. */
+	void Start()
+	{
+		SpeechManager.Instance.Say("WhereAmI", 6);
+		SpeechManager.Instance.Say("HaveToFindMyWayHome", 15);
 	}
 
 	/** Update. */
@@ -114,6 +125,37 @@ public class PlayerController : Singleton<PlayerController> {
 		Grounded = Physics.Raycast(ray, GroundedThreshold, GroundMask);
 	}
 
+
+	// Private Methods
+	// -----------------------------------------------------
+
+	/** Player has picker up a bean. */
+	public void PickUpBean()
+	{
+		// Count the beans... :)
+		BeanCounter++;
+
+		// Schedule speech.
+		SpeechManager.Instance.Say("AGiantBean", 2);
+		SpeechManager.Instance.Say("HmmIWonder", 4);
+		SpeechManager.Instance.Say("MaybeICouldPlantIt", 6);
+
+		// Cancel irrelevant speech.
+		SpeechManager.Instance.Cancel("WhereAmI");
+		SpeechManager.Instance.Cancel("HaveToFindMyWayHome");
+	}
+
+	/** Player has sown a bean. */
+	public void SowBean()
+	{
+		// Count the beans... :)
+		BeanCounter--;
+
+		// Cancel speech that's no longer relevant.
+		SpeechManager.Instance.Cancel("AGiantBean");
+		SpeechManager.Instance.Cancel("HmmIWonder");
+		SpeechManager.Instance.Cancel("MaybeICouldPlantIt");
+	}
 
 
 	// Private Methods

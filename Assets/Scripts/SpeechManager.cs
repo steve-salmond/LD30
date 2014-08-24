@@ -35,6 +35,10 @@ public class SpeechManager : Singleton<SpeechManager>
 		[System.NonSerialized]
 		public int PlayCount = 0;
 
+		/** Whether line has been cancelled. */
+		[System.NonSerialized]
+		public bool Cancelled = false;
+
 	}
 
 	// Members
@@ -45,9 +49,6 @@ public class SpeechManager : Singleton<SpeechManager>
 
 	/** Queue of lines to play. */
 	private Queue<Line> playlist = new Queue<Line>();
-
-	/** Whether source was known to be playing last frame. */
-	private bool wasPlaying = false;
 
 	/** Next available play time. */
 	private float nextPlayTime = 0;
@@ -66,41 +67,23 @@ public class SpeechManager : Singleton<SpeechManager>
 			Source = audio;
 	}
 
-	/** Initialization. */
-	void Start()
-	{
-		Say("WhereAmI", 6);
-		Say("HaveToFindMyWayHome", 15);
-	}
-
 	/** Play speech as needed. */
 	void Update()
 	{
-		// Can't say two things at once!
-		if (Source.isPlaying)
-		{
-			wasPlaying = true;
-			return;
-		}
-
 		// Do we have anything to say right now?
-		if (playlist.Count > 0)
+		if (playlist.Count > 0 && Time.time >= nextPlayTime)
 		{
-			if (wasPlaying)
-			{
-				// Wait until the right moment to say it.
-				nextPlayTime = Time.time + Random.Range(MinInterval, MaxInterval);
-			}
-			else if (Time.time >= nextPlayTime)
-			{
-				// Let's say the line now!
-				Line line = playlist.Dequeue();
-				Source.PlayOneShot(line.Clip);
-			}
+			Line line = playlist.Dequeue();
+
+			// Check if the line was cancelled.
+			if (line.Cancelled)
+				return;
+
+			// Play the line.
+			Source.PlayOneShot(line.Clip);
+			nextPlayTime = Time.time + line.Clip.length + Random.Range(MinInterval, MaxInterval);
 		}
 
-		// Remember whether audio was playing this frame.
-		wasPlaying = false;
 	}
 
 
@@ -118,13 +101,19 @@ public class SpeechManager : Singleton<SpeechManager>
 			if (line.PlayCount >= line.Limit)
 				return;
 
+		line.PlayCount++;
+
 		if (delay > 0)
-			StartCoroutine(Schedule(id, delay));
+			StartCoroutine(Schedule(line, delay));
 		else
-		{
-			line.PlayCount++;
 			playlist.Enqueue(line);
-		}
+	}
+
+	/** Cancel a line of speech. */
+	public void Cancel(string id)
+	{
+		if (lookup.ContainsKey(id))
+			lookup[id].Cancelled = true;
 	}
 
 
@@ -132,13 +121,13 @@ public class SpeechManager : Singleton<SpeechManager>
 	// -----------------------------------------------------
 
 	/** Schedule a line of speech. */
-	private IEnumerator Schedule(string id, float delay)
+	private IEnumerator Schedule(Line line, float delay)
 	{
 		// Wait for a bit.
 		yield return new WaitForSeconds(delay);
 
 		// Say the line immediately.
-		Say(id);
+		playlist.Enqueue(line);
 	}
 
 }
