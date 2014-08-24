@@ -20,6 +20,9 @@ public class GravityManager : Singleton<GravityManager>
 	/** Strength of the gravitational field. */
 	public float Strength;
 
+	/** Number of samples to take when estimating gravity. */
+	public int Samples = 128;
+
 
 	// Members
 	// -----------------------------------------------------
@@ -37,8 +40,7 @@ public class GravityManager : Singleton<GravityManager>
 		// Scatter rays out randomly, looking for solid ground.
 		// When we hit it, accumulate the resulting surface normal.
 		Vector3 gravity = Vector3.zero;
-		int samples = 64;
-		for (int i = 0; i < samples; i++)
+		for (int i = 0; i < Samples; i++)
 		{
 			Vector3 direction = Random.onUnitSphere;
 			if (Physics.Raycast(point, direction, out hit, GroundMaxDistance, GroundLayers))

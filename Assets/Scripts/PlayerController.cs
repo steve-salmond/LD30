@@ -51,6 +51,9 @@ public class PlayerController : Singleton<PlayerController> {
 	public bool Dead
 	{ get { return Health <= 0; } }
 
+	/** How much to smooth the player's up vector. */
+	public float UpSmoothingFactor = 0.5f;
+
 
 	// Members
 	// -----------------------------------------------------
@@ -131,7 +134,7 @@ public class PlayerController : Singleton<PlayerController> {
 	{
 		// Update the smoothed reference up vector.
 		Vector3 target = GetTargetUp();
-		up = Vector3.SmoothDamp(up, target, ref upVelocity, 0.25f);
+		up = Vector3.SmoothDamp(up, target, ref upVelocity, UpSmoothingFactor);
 		up = up.normalized;
 	}
 	

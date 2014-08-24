@@ -12,7 +12,10 @@ public class Plant : MonoBehaviour
 	public List<Rule> Rules;
 
 	/** Termination depth - determines when branches stop growing. */
-	public int MaxDepth = 10;
+	public float MaxDepth = 10;
+
+	/** Duration of the wither effect on each piece. */
+	public float MinWitherTime = 0.25f, MaxWitherTime = 0.5f;
 
 
 	// Inner Classes
@@ -37,6 +40,9 @@ public class Plant : MonoBehaviour
 		/** The piece that represents this branch. */
 		public GameObject Piece;
 
+		/** Whether this branch is a leaf. */
+		public bool Leaf = false;
+
 		/** Duration of growth phase. */
 		public float MinDuration = 1, MaxDuration = 1;
 
@@ -50,8 +56,15 @@ public class Plant : MonoBehaviour
 		public float MinScale = 1, MaxScale = 1;
 
 		/** Depth increment. */
-		public int MinDeepen = 1, MaxDeepen = 1;
+		public float MinDeepen = 1, MaxDeepen = 1;
 	}
+
+
+	// Private members
+	// -----------------------------------------------------
+
+	/** The set of plant pieces. */
+	private Stack<GameObject> pieces = new Stack<GameObject>();
 
 
 	// Unity Methods
@@ -65,11 +78,11 @@ public class Plant : MonoBehaviour
 	}
 
 
-	// Growth
+	// Public Methods
 	// -----------------------------------------------------
 
 	/** Grows the plant from the supplied parent piece. */
-	private void Grow(GameObject from = null, GameObject parent = null, int depth = 0)
+	public void Grow(GameObject from = null, GameObject parent = null, float depth = 0)
 	{
 		// Check if we should terminate growth.
 		if (depth >= MaxDepth)
@@ -106,8 +119,18 @@ public class Plant : MonoBehaviour
 			StartCoroutine(Generate(branch, parent, depth));
 	}
 
+	/** Kill off a plant in reverse order of growth. */
+	public void Die()
+	{
+		StartCoroutine(Wither());
+	}
+
+
+	// Private Methods
+	// -----------------------------------------------------
+
 	/** Generates a branch, and kicks off subsequent growth. */
-	private IEnumerator Generate(Branch b, GameObject parent, int depth)
+	private IEnumerator Generate(Branch b, GameObject parent, float depth)
 	{
 		// If no parent is given, use the plant as parent.
 		// This will be the case for roots.
@@ -123,12 +146,12 @@ public class Plant : MonoBehaviour
 		Vector3 translate = RandomVectorInRange(b.MinTranslate, b.MaxTranslate);
 		Vector3 rotate = RandomVectorInRange(b.MinRotate, b.MaxRotate);
 		float scale = Random.Range(b.MinScale, b.MaxScale);
-		int deepen = Random.Range(b.MinDeepen, b.MaxDeepen);
+		float deepen = Random.Range(b.MinDeepen, b.MaxDeepen);
 
 		// Move branch into its desired orientation.
 		piece.transform.localPosition = translate;
 		piece.transform.localRotation = Quaternion.Euler(rotate);
-		piece.transform.localScale = Vector3.zero;
+		piece.transform.localScale = new Vector3(scale, 0, scale);
 
 		// Scale up the branch over time.
 		float duration = Random.Range(b.MinDuration, b.MaxDuration);
@@ -137,21 +160,54 @@ public class Plant : MonoBehaviour
 		{
 			float f = (Time.time - start) / (end - start);
 			float s = scale * f;
-			piece.transform.localScale = new Vector3(s, s, s);
+			piece.transform.localScale = new Vector3(scale, s, scale);
 			yield return new WaitForEndOfFrame();
 		}
 
 		// Set branch to final scaling.
 		piece.transform.localScale = new Vector3(scale, scale, scale);
 
-		// Kick off further growth from this branch.
-		Grow(b.Piece, piece, depth + deepen);
+		// Add piece to the stack.
+		pieces.Push(piece);
+
+		// Kick off further growth from this branch, unless it's a leaf.
+		if (!b.Leaf)
+			Grow(b.Piece, piece, depth + deepen);
 
 		// Done.
 		yield return null;
 	}
 
+	/** Withers the plant over time, then destroys it. */
+	private IEnumerator Wither()
+	{
+		// Keep withering until all pieces are dead.
+		while (pieces.Count > 0)
+		{
+			// Get a piece to wither.
+			GameObject piece = pieces.Pop();
 
+			// Scale down the piece over time.
+			float duration = Random.Range(MinWitherTime, MaxWitherTime);
+			float start = Time.time, end = start + duration;
+			float scale = piece.transform.localScale.y;
+			while (Time.time < end)
+			{
+				float f = (Time.time - start) / (end - start);
+				float s = scale * (1 - f);
+				piece.transform.localScale = new Vector3(scale, s, scale);
+				yield return new WaitForEndOfFrame();
+			}
+
+			// Kill the piece when it has withered.
+			Destroy(piece);
+		}
+
+		// Once everything has withered, destroy plant entirely.
+		Destroy(gameObject);
+	}
+
+	/** Utility method for generating a random vector within a value range. */
 	private Vector3 RandomVectorInRange(Vector3 a, Vector3 b)
 	{
 		float x = Random.Range(a.x, b.x);
@@ -159,5 +215,7 @@ public class Plant : MonoBehaviour
 		float z = Random.Range(a.z, b.z);
 		return new Vector3(x, y, z);
 	}
+
+
 
 }
