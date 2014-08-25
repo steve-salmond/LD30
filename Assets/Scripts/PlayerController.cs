@@ -84,6 +84,9 @@ public class PlayerController : Singleton<PlayerController> {
 	/** Reference up vector velocity. */
 	private Vector3 upVelocity = Vector3.zero;
 
+	/** Timeout for jumping. */
+	private float nextJumpTime = 0;
+
 
 	// Unity Methods
 	// -----------------------------------------------------
@@ -268,10 +271,11 @@ public class PlayerController : Singleton<PlayerController> {
 		Debug.DrawRay(rigidbody.position, f, Color.yellow);
 		
 		// Apply jump.
-		if (Input.GetButton("Jump") && Grounded)
+		if (Input.GetButton("Jump") && Grounded && Time.time > nextJumpTime)
 		{
 			rigidbody.AddForce(up * JumpSpeed * dt);
 			JumpSource.PlayOneShot(JumpSound, 0.15f);
+			nextJumpTime = Time.time + 1;
 		}
 	}
 }
