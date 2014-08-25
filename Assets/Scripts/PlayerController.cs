@@ -187,7 +187,7 @@ public class PlayerController : Singleton<PlayerController> {
 		SpeechManager.Instance.Say("AGemStone", 2);
 		SpeechManager.Instance.Say("MoreOfThem", 4);
 		SpeechManager.Instance.Say("CollectThemAll", 8);
-		SpeechManager.Instance.Say("ThreeShouldBeEnough", 9);
+		SpeechManager.Instance.Say("FiveShouldBeEnough", 9);
 		SpeechManager.Instance.Say("MightyQuest", 10);
 		SpeechManager.Instance.Say("WhyNoIdea02", 15);
 
@@ -203,13 +203,17 @@ public class PlayerController : Singleton<PlayerController> {
 	/** Called when player wins the game. */
 	public void Win()
 	{
-		EndController.Instance.FadeIn();
-		SpeechManager.Instance.Say("TheEnd");
-		StartCoroutine(WaitForKeypress());
+
+		StartCoroutine(EndSequence());
 	}
 
-	private IEnumerator WaitForKeypress()
+	private IEnumerator EndSequence()
 	{
+		SpeechManager.Instance.Say("TheEnd");
+
+		yield return new WaitForSeconds(3);
+		EndController.Instance.FadeIn();
+
 		while (!Input.GetButton("Fire1"))
 			yield return new WaitForEndOfFrame();
 
