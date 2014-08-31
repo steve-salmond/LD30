@@ -21,6 +21,12 @@ public class PlayerController : Singleton<PlayerController> {
 	/** How close player has to be to a solid surface to be considered 'grounded'. */
 	public float GroundedThreshold;
 
+	/** Threshold for applying braking drag when player stops moving. */
+	public float GroundedBrakeThreshold = 0.2f;
+
+	/** Braking drag to apply when grounded and player stops moving. */
+	public float GroundedBrakeDrag = 50;
+
 	/** 
 	 * Player's upright transform. 
 	 * This stays oriented perpendicular to the current gravity vector.
@@ -87,6 +93,10 @@ public class PlayerController : Singleton<PlayerController> {
 	/** Timeout for jumping. */
 	private float nextJumpTime = 0;
 
+	/** Normal drag for player's rigidbody. */
+	private float normalDrag = 1;
+
+
 
 	// Unity Methods
 	// -----------------------------------------------------
@@ -97,6 +107,7 @@ public class PlayerController : Singleton<PlayerController> {
 		Application.targetFrameRate = 60;
 		t = transform;
 		Health = 100;
+		normalDrag = rigidbody.drag;
 	}
 
 	/** Initialization. */
@@ -106,10 +117,10 @@ public class PlayerController : Singleton<PlayerController> {
 		TitleController.Instance.FadeIn();
 
 		SpeechManager.Instance.Say("OnceUponATime", 1);
-		SpeechManager.Instance.Say("WhereAmI", 3);
-		SpeechManager.Instance.Say("IsThisADream", 5);
-		SpeechManager.Instance.Say("LittleDidHeKnow", 6);
-		SpeechManager.Instance.Say("Adventure", 12);
+		SpeechManager.Instance.Say("WhereAmI", 2);
+		SpeechManager.Instance.Say("IsThisADream", 2);
+		// SpeechManager.Instance.Say("LittleDidHeKnow", 6);
+		SpeechManager.Instance.Say("Adventure", 2);
 	}
 
 	/** Update. */
@@ -130,15 +141,18 @@ public class PlayerController : Singleton<PlayerController> {
 		if (Alive)
 			UpdateInput();
 
+		// Update player's grounded status.
+		Ray ray = new Ray(t.position, -up);
+		Grounded = Physics.Raycast(ray, GroundedThreshold, GroundMask);
+	}
+
+	void LateUpdate()
+	{
 		// Update player's orientation.
 		Vector3 lookat = Upright.forward;
 		Vector3 right = Vector3.Cross(up, lookat);
 		Vector3 forward = Vector3.Cross(right, up);
 		Upright.rotation = Quaternion.LookRotation(forward, up);
-
-		// Update player's grounded status.
-		Ray ray = new Ray(t.position, -up);
-		Grounded = Physics.Raycast(ray, GroundedThreshold, GroundMask);
 	}
 
 
@@ -152,11 +166,11 @@ public class PlayerController : Singleton<PlayerController> {
 		BeanCounter++;
 
 		// Schedule speech.
-		SpeechManager.Instance.Say("AGiantBean", 2);
-		SpeechManager.Instance.Say("HmmIWonder", 4);
-		SpeechManager.Instance.Say("MaybeICouldPlantIt", 6);
-		SpeechManager.Instance.Say("PlantPrompt01", 8);
-		SpeechManager.Instance.Say("PlantPrompt02", 12);
+		SpeechManager.Instance.Say("AGiantBean", 1);
+		SpeechManager.Instance.Say("HmmIWonder", 2);
+		SpeechManager.Instance.Say("MaybeICouldPlantIt",1);
+		SpeechManager.Instance.Say("PlantPrompt01", 2);
+		SpeechManager.Instance.Say("PlantPrompt02", 2);
 	}
 
 	/** Player has sown a bean. */
@@ -169,8 +183,8 @@ public class PlayerController : Singleton<PlayerController> {
 		SpeechManager.Instance.Say("Aah", 0);
 		SpeechManager.Instance.Say("ABeanstalk", 0);
 		SpeechManager.Instance.Say("ItsHuge", 1);
-		SpeechManager.Instance.Say("MaybeICanClimbIt", 4);
-		SpeechManager.Instance.Say("MoreBeans", 10);
+		SpeechManager.Instance.Say("MaybeICanClimbIt", 1);
+		SpeechManager.Instance.Say("MoreBeans", 4);
 
 		// Cancel speech that's no longer relevant.
 		SpeechManager.Instance.Cancel("AGiantBean");
@@ -188,11 +202,11 @@ public class PlayerController : Singleton<PlayerController> {
 
 		// Key off speech lines
 		SpeechManager.Instance.Say("AGemStone", 2);
-		SpeechManager.Instance.Say("MoreOfThem", 4);
-		SpeechManager.Instance.Say("CollectThemAll", 8);
-		SpeechManager.Instance.Say("FiveShouldBeEnough", 9);
-		SpeechManager.Instance.Say("MightyQuest", 10);
-		SpeechManager.Instance.Say("WhyNoIdea02", 15);
+		SpeechManager.Instance.Say("MoreOfThem", 2);
+		SpeechManager.Instance.Say("CollectThemAll", 2);
+		SpeechManager.Instance.Say("FiveShouldBeEnough", 2);
+		SpeechManager.Instance.Say("MightyQuest", 2);
+		SpeechManager.Instance.Say("WhyNoIdea02", 3);
 
 		// Win condition.
 		if (GemCounter >= GemsToWin)
@@ -263,10 +277,16 @@ public class PlayerController : Singleton<PlayerController> {
 		Vector3 move = tCam.forward;
 		
 		// Apply movement inputs.
+		float ix = Input.GetAxis("Horizontal"), dx = ix;
+		float iy = Input.GetAxis("Vertical"), dy = iy;
 		float speed = Grounded ? GroundedSpeed : AirborneSpeed;
-		float dx = Input.GetAxis("Horizontal");
-		float dy = Input.GetAxis("Vertical");
-		Vector3 f = (move * dy + strafe * dx).normalized;
+
+		// Determine an overall desired movement vector.
+		Vector3 f = move * dy + strafe * dx;
+		if (f.sqrMagnitude > 1)
+			f.Normalize();
+
+		// Apply desired movement input to the rigidbody.
 		rigidbody.AddForce(f * speed * dt);
 		Debug.DrawRay(rigidbody.position, f, Color.yellow);
 		
@@ -277,5 +297,12 @@ public class PlayerController : Singleton<PlayerController> {
 			JumpSource.PlayOneShot(JumpSound, 0.15f);
 			nextJumpTime = Time.time + 1;
 		}
+
+		// Slow the player down quickly when grounded.
+		if (Grounded && f.magnitude < GroundedBrakeThreshold)
+			rigidbody.drag = GroundedBrakeDrag;
+		else
+			rigidbody.drag = normalDrag;
+
 	}
 }

@@ -50,17 +50,29 @@ public class SpeechManager : Singleton<SpeechManager>
 
 	}
 
+	/** Speaking of a line at with an optional delay. */
+	public class Speak
+	{
+		/** The line to read. */
+		public Line Line;
+
+		/** Delay before reading the line. */
+		public float Delay = 0;
+
+		/** Constructor. */
+		public Speak(Line line, float delay)
+		{ Line = line; Delay = delay; }
+	}
+
+
 	// Members
 	// -----------------------------------------------------
 
 	/** Look up map for lines. */
 	private Dictionary<string, Line> lookup = new Dictionary<string, Line>();
 
-	/** Queue of lines to play. */
-	private Queue<Line> playlist = new Queue<Line>();
-
-	/** Next available play time. */
-	private float nextPlayTime = 0;
+	/** Queue of speech items to play. */
+	private Queue<Speak> playlist = new Queue<Speak>();
 
 
 	// Unity Methods
@@ -69,32 +81,14 @@ public class SpeechManager : Singleton<SpeechManager>
 	/** Preinitialization. */
 	void Awake()
 	{
+		// Populate lookup for lines of speech.
 		foreach (Line line in Lines)
 			lookup[line.Clip.name] = line;
+
+		// Kick off the speech update routine.
+		StartCoroutine(SpeechRoutine());
 	}
 
-	/** Play speech as needed. */
-	void Update()
-	{
-		// Do we have anything to say right now?
-		if (playlist.Count > 0 && Time.time >= nextPlayTime)
-		{
-			Line line = playlist.Dequeue();
-
-			// Check if the line was cancelled.
-			if (line.Cancelled)
-				return;
-
-			// Play the line.
-			if (line.Character == Character.Boy)
-				Boy.PlayOneShot(line.Clip);
-			else if (line.Character == Character.Narrator)
-				Narrator.PlayOneShot(line.Clip);
-
-			nextPlayTime = Time.time + line.Clip.length + Random.Range(MinInterval, MaxInterval);
-		}
-
-	}
 
 
 	// Public Methods
@@ -113,10 +107,8 @@ public class SpeechManager : Singleton<SpeechManager>
 
 		line.PlayCount++;
 
-		if (delay > 0)
-			StartCoroutine(Schedule(line, delay));
-		else
-			playlist.Enqueue(line);
+		// Schedule the speech.
+		playlist.Enqueue(new Speak(line, delay));
 	}
 
 	/** Cancel a line of speech. */
@@ -130,14 +122,40 @@ public class SpeechManager : Singleton<SpeechManager>
 	// Private Methods
 	// -----------------------------------------------------
 
-	/** Schedule a line of speech. */
-	private IEnumerator Schedule(Line line, float delay)
+	/** Say lines of speech in the correct order. */
+	private IEnumerator SpeechRoutine()
 	{
-		// Wait for a bit.
-		yield return new WaitForSeconds(delay);
+		// Keep trying to say stuff for as long as the game runs.
+		while (true)
+		{
+			// Wait for a line of speech to be available.
+			while (playlist.Count == 0)
+				yield return new WaitForEndOfFrame();
 
-		// Say the line immediately.
-		playlist.Enqueue(line);
+			// Get the line of speech.
+			Speak speak = playlist.Dequeue();
+			
+			// Check if the line was cancelled.
+			Line line = speak.Line;
+			if (line.Cancelled)
+				continue;
+
+			// Wait for the specified speech delay.
+			yield return new WaitForSeconds(speak.Delay);
+
+			// Play the line.
+			if (line.Character == Character.Boy)
+				Boy.PlayOneShot(line.Clip);
+			else if (line.Character == Character.Narrator)
+				Narrator.PlayOneShot(line.Clip);
+
+			// Wait until the line is finished.
+			yield return new WaitForSeconds(line.Clip.length);
+
+			// Wait for a random interval.
+			float interval = Random.Range(MinInterval, MaxInterval);
+			yield return new WaitForSeconds(interval);
+		}
 	}
 
 }

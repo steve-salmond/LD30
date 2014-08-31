@@ -4,7 +4,7 @@
  * Rotates a game object about the given local axis with a set speed.
  */
 
-public class Orbit : MonoBehaviour 
+public class Spin : MonoBehaviour 
 {
 
 	// Properties
